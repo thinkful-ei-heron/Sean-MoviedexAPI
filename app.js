@@ -8,8 +8,10 @@ const cors = require('cors');
 const MOVIELIST = require('./movies-data-small.json');
 
 const app = express();
+const PORT = process.env.PORT || 8000
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common'
 
-app.use(morgan('dev'));
+app.use(morgan(morganSetting));
 app.use(helmet());
 app.use(cors());
 
@@ -25,6 +27,16 @@ app.use(function validateBearerToken(req, res, next) {
     next();
 
 });
+
+app.use((error, req, res, next) => {
+  let response
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error' }}
+  } else {
+    response = { error }
+  }
+  res.status(500).json(response)
+})
 
 app.get('/movie', (req, res) => {
   let genreUncased = req.query.genre;
@@ -152,4 +164,6 @@ app.get('/movie', (req, res) => {
 });
 
 
-app.listen(49443, () => console.log('Server on 49443'));
+app.listen(PORT, () => {
+  console.log(`Server listening at http://localhost:${PORT}`)
+});
